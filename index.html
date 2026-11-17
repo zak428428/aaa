@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>杭电学生事项助手（非官方试用）</title>
+<style>
+  :root{
+    --blue:#2563eb; --blue2:#06b6d4;
+    --bg:#f4f6fb; --text:#1a2332; --muted:#6b7688; --line:#e6e9f0;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:
+      radial-gradient(1200px 600px at 8% -10%,#e0ecff 0%,transparent 60%),
+      radial-gradient(900px 500px at 110% 0%,#d9f7f4 0%,transparent 55%),
+      var(--bg);
+    color:var(--text);
+    min-height:100dvh;
+  }
+  .hidden{display:none !important}
+
+  /* ---------- 登录页 ---------- */
+  .login-wrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px 18px}
+  .login-card{
+    width:100%;max-width:400px;background:#fff;border-radius:22px;
+    padding:30px 24px 22px;border:1px solid rgba(255,255,255,.9);
+    box-shadow:0 18px 50px rgba(30,60,120,.12);
+  }
+  .logo{
+    width:60px;height:60px;border-radius:18px;margin:0 auto 14px;
+    display:flex;align-items:center;justify-content:center;font-size:30px;
+    background:linear-gradient(135deg,var(--blue),var(--blue2));
+    box-shadow:0 8px 20px rgba(37,99,235,.3);
+  }
+  .login-card h1{font-size:20px;text-align:center;margin:0 0 6px}
+  .login-sub{text-align:center;font-size:13px;color:var(--muted);margin:0 0 22px;line-height:1.6}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  .field input{
+    width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--line);
+    border-radius:12px;background:#fafbfe;outline:none;transition:.2s;
+  }
+  .field input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(37,99,235,.1)}
+  .btn-main{
+    width:100%;padding:14px;font-size:16px;font-weight:600;color:#fff;border:0;
+    border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--blue2));
+    cursor:pointer;margin-top:6px;box-shadow:0 10px 24px rgba(37,99,235,.28);
+    transition:transform .12s;
+  }
+  .btn-main:active{transform:translateY(1px)}
+  .btn-skip{
+    display:block;width:100%;margin-top:14px;padding:10px;border:0;background:transparent;
+    color:var(--blue);font-size:14px;cursor:pointer;
+  }
+  .btn-skip:hover{text-decoration:underline}
+  .err{color:#d93025;font-size:13px;min-height:18px;margin-top:10px;text-align:center;line-height:1.6}
+  .demo-note{
+    margin-top:16px;padding:12px;border-radius:12px;background:#f0f6ff;
+    color:#3b5270;font-size:12px;line-height:1.75;
+  }
+
+  /* ---------- 主页面 ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:10;
+    background:rgba(255,255,255,.86);backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{max-width:820px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;gap:12px}
+  .avatar{
+    width:40px;height:40px;border-radius:50%;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--blue),var(--blue2));
+    color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;
+  }
+  .hello{flex:1;min-width:0}
+  .hello b{font-size:15px;display:block}
+  .hello span{font-size:12px;color:var(--muted)}
+  .logout{
+    border:1px solid var(--line);background:#fff;border-radius:999px;
+    padding:7px 13px;font-size:13px;color:var(--muted);cursor:pointer;
+  }
+  .main{max-width:820px;margin:0 auto;padding:18px 18px 40px}
+
+  /* 个人概览卡 */
+  .panel{
+    background:linear-gradient(135deg,#2563eb,#06b6d4);color:#fff;
+    border-radius:18px;padding:18px;margin:14px 0 4px;
+    box-shadow:0 10px 26px rgba(37,99,235,.25);
+  }
+  .panel-title{font-size:13px;opacity:.9;margin-bottom:12px}
+  .stats{display:flex;gap:8px}
+  .stat{flex:1;background:rgba(255,255,255,.16);border-radius:12px;padding:10px 6px;text-align:center}
+  .stat b{display:block;font-size:22px;line-height:1.2}
+  .stat span{font-size:11.5px;opacity:.92}
+  .panel-tip{font-size:12px;opacity:.92;margin-top:12px;line-height:1.6}
+
+  /* 游客提示 */
+  .guest-tip{
+    background:#fff8e6;border:1px solid #ffe2a8;color:#8a5300;
+    border-radius:12px;padding:10px 14px;font-size:12.5px;margin:14px 0 2px;line-height:1.7;
+  }
+
+  .searchbox{position:relative;margin-top:14px}
+  .searchbox .ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:17px;opacity:.5}
+  .searchbox input{
+    width:100%;padding:15px 14px 15px 42px;font-size:16px;border:1.5px solid var(--line);
+    border-radius:16px;background:#fff;outline:none;
+    box-shadow:0 4px 14px rgba(30,60,120,.05);transition:.2s;
+  }
+  .searchbox input:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(37,99,235,.1)}
+
+  .hot{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px;align-items:center}
+  .hot>span{font-size:12px;color:var(--muted)}
+  .chip{
+    font-size:13px;padding:6px 12px;border-radius:999px;background:#fff;
+    border:1px solid var(--line);cursor:pointer;color:#3b5270;
+  }
+  .chip:active{background:#eef4ff}
+
+  .cats{display:flex;gap:8px;margin:14px 0 4px;flex-wrap:wrap}
+  .cat{
+    display:flex;align-items:center;gap:6px;padding:9px 15px;border:1px solid var(--line);
+    border-radius:999px;background:#fff;font-size:14px;cursor:pointer;color:#3b5270;
+    transition:.2s;
+  }
+  .cat.active{
+    background:linear-gradient(135deg,var(--blue),var(--blue2));
+    border-color:transparent;color:#fff;box-shadow:0 6px 16px rgba(37,99,235,.25);
+  }
+
+  .count{font-size:13px;color:var(--muted);margin:10px 2px 2px}
+
+  .card{
+    background:#fff;border-radius:16px;padding:16px 16px 14px;margin:12px 0;
+    border:1px solid var(--line);border-left:4px solid var(--c,#2563eb);
+    box-shadow:0 4px 16px rgba(30,60,120,.05);
+    transition:transform .15s,box-shadow .15s;
+  }
+  .card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(30,60,120,.1)}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .tag{font-size:12px;padding:3px 9px;border-radius:999px;background:#eef2ff;color:#345}
+  .tag.type{background:#fff4e5;color:#8a5300}
+  .title{font-size:16px;font-weight:700;margin:4px 0 8px;line-height:1.45}
+  .row{font-size:14px;line-height:1.7;margin:4px 0;color:#2b3038}
+  .label{color:var(--muted);margin-right:4px}
+  a{color:var(--blue);text-decoration:none;word-break:break-all}
+  a:hover{text-decoration:underline}
+  .btn{
+    margin-top:10px;padding:9px 14px;border:1px solid #d3d8e2;border-radius:10px;
+    background:#fff;font-size:14px;cursor:pointer;color:var(--text);transition:.15s;
+  }
+  .btn.done{background:#e8f7ec;border-color:#a5d6b0;color:#1f6b2a;font-weight:600}
+
+  .empty{
+    background:#fff;border:1px dashed #cfd6e4;border-radius:16px;
+    padding:26px 18px;color:var(--muted);font-size:14px;line-height:1.9;text-align:center;
+  }
+  .empty b{color:var(--text)}
+  .foot{
+    margin:24px 0 8px;padding:14px 16px;background:#fff;border:1px solid var(--line);
+    border-radius:14px;font-size:12.5px;color:var(--muted);line-height:1.8;
+  }
+  .foot b{color:var(--text)}
+</style>
+</head>
+<body>
+
+<!-- ========== 登录页 ========== -->
+<div id="loginView" class="login-wrap">
+  <div class="login-card">
+    <div class="logo">🎓</div>
+    <h1>杭电学生事项助手</h1>
+    <p class="login-sub">登录后查看你的专属事项面板<br>学习 · 校内办事 · 生活服务</p>
+
+    <div class="field">
+      <label>学号</label>
+      <input id="sid" type="text" inputmode="numeric" placeholder="演示账号：12345678" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>密码</label>
+      <input id="pwd" type="password" placeholder="演示密码：87654321" autocomplete="current-password">
+    </div>
+
+    <button class="btn-main" id="loginBtn">登录</button>
+    <button class="btn-skip" id="skipBtn">跳过登录，直接体验 →</button>
+    <div class="err" id="err"></div>
+
+    <div class="demo-note">
+      ⚠️ <b>演示登录，请勿输入真实密码</b><br>
+      本原型为课程参赛作品，没有服务器，<b>不连接学校统一身份认证</b>。登录页仅用于展示流程：输入演示账号 <b>12345678 / 87654321</b> 可查看个人面板，或直接跳过登录以游客身份体验。
+    </div>
+  </div>
+</div>
+
+<!-- ========== 主页面 ========== -->
+<div id="appView" class="hidden">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="avatar" id="avatar">👋</div>
+      <div class="hello">
+        <b id="greet">你好，同学</b>
+        <span id="sidLabel"></span>
+      </div>
+      <button class="logout" id="logoutBtn">退出</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- 个人概览（仅演示账号登录可见） -->
+    <div id="personalPanel" class="panel hidden">
+      <div class="panel-title">我的事项概览</div>
+      <div class="stats">
+        <div class="stat"><b id="statDone">0</b><span>已完成</span></div>
+        <div class="stat"><b id="statTodo">0</b><span>待办未完成</span></div>
+        <div class="stat"><b id="statAll">15</b><span>事项总数</span></div>
+      </div>
+      <div class="panel-tip" id="panelTip"></div>
+    </div>
+
+    <!-- 游客提示（跳过登录可见） -->
+    <div id="guestTip" class="guest-tip hidden">
+      👀 游客模式：你可以直接搜索和查看事项。“我已完成”只保存在当前浏览器，退出或清缓存会丢失。
+    </div>
+
+    <div class="searchbox">
+      <span class="ico">🔍</span>
+      <input id="search" placeholder="输入关键词，如：英语报名、宿舍报修、在校证明" autocomplete="off">
+    </div>
+
+    <div class="hot">
+      <span>大家都在搜：</span>
+      <button class="chip" data-q="英语">英语报名</button>
+      <button class="chip" data-q="报修">宿舍报修</button>
+      <button class="chip" data-q="证明">在校证明</button>
+      <button class="chip" data-q="校园卡">校园卡</button>
+      <button class="chip" data-q="校车">校车</button>
+    </div>
+
+    <div class="cats" id="cats">
+      <button class="cat active" data-cat="全部">✨ 全部</button>
+      <button class="cat" data-cat="学习">📚 学习</button>
+      <button class="cat" data-cat="校内办事">🏫 校内办事</button>
+      <button class="cat" data-cat="生活服务">🌿 生活服务</button>
+    </div>
+
+    <div class="count" id="count"></div>
+    <div id="results"></div>
+
+    <div class="foot">
+      <b>数据说明</b><br>
+      本页面为课程参赛演示原型，事项数据整理自杭电教务处、学工部、后勤等公开页面，仅用于展示查询流程。每条卡片标注来源和最后核对日期；部分页面可能随时间更新，具体以杭电官方最新通知为准。<br>
+      “我已完成”仅保存在你当前浏览器中，网站不核实、也不会上传你的实际办理状态。本页面为非官方工具，不代表学校官方立场。
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= 演示账号（想换账号改这两行） ================= */
+const DEMO_SID = "12345678";
+const DEMO_PWD = "87654321";
+
+/* ================= 数据 ================= */
+const items = [
+  { id:"course-selection", category:"学习", type:"待办事项", title:"查看本学期选课通知",
+    keywords:"选课 退课 排课 选课通知 新生选课 教务系统",
+    audience:"通知中规定的学生（新生、老生、结业返校修读学生等）",
+    action:"确认选课时间，阅读选课说明，按学校要求登录教务系统操作。",
+    time:"以教务处每学期选课通知为准",
+    link:"https://jwc.hdu.edu.cn/pkxk/list1.htm",
+    source:"杭电教务处“排课选课”栏目", checked:"2026-11-17" },
+
+  { id:"cet-exam", category:"学习", type:"待办事项", title:"查看全国大学外语四六级考试报名通知",
+    keywords:"英语 四级 六级 CET 四六级 考试 报名 外语 等级考试",
+    audience:"通知中规定的在校学生",
+    action:"确认报名时间、报名条件和报名入口，按通知完成报名及缴费。",
+    time:"以教务处当次报名通知为准（例：上半年报名3月18日10:00—4月2日17:00）",
+    link:"https://jwc.hdu.edu.cn/2026/0313/c13475a290234/page.htm",
+    source:"杭电教务处考试管理通知", checked:"2026-11-17" },
+
+  { id:"computer-exam", category:"学习", type:"待办事项", title:"查看浙江省高校计算机等级考试报名通知",
+    keywords:"计算机 等级考试 计算机等级 报名 省计算机 考试",
+    audience:"通知中规定的学生",
+    action:"查看报名时间、报名方式和报名网址，按通知完成报名。",
+    time:"以教务处最新通知为准",
+    link:"https://jwc.hdu.edu.cn/ksgl/list3.htm",
+    source:"杭电教务处“考试管理”栏目", checked:"2026-11-17" },
+
+  { id:"timetable", category:"学习", type:"服务指南", title:"查看课表与教学安排",
+    keywords:"课表 查课表 教学安排 上课时间 教室 调课 停课",
+    audience:"全体在校学生",
+    action:"登录教务系统查看个人课表；调课、停课等教学安排以教务处和学院通知为准。",
+    time:"开学前及学期中随时可查",
+    link:"https://jwc.hdu.edu.cn/",
+    source:"杭电教务处", checked:"2026-11-17" },
+
+  { id:"training-plan", category:"学习", type:"服务指南", title:"了解培养方案与学分要求",
+    keywords:"培养方案 学分 毕业要求 课程计划 通识选修 专业选修",
+    audience:"需要核对毕业学分要求的学生",
+    action:"通过教务处或学院发布的培养方案，核对自己所在专业的学分结构和课程要求。",
+    time:"入学后至毕业前随时可查",
+    link:"https://jwc.hdu.edu.cn/",
+    source:"杭电教务处（具体培养方案页面请以你所在学院通知为准）", checked:"2026-11-17" },
+
+  { id:"freshman-checkin", category:"校内办事", type:"待办事项", title:"查看新生报到流程与材料",
+    keywords:"新生 报到 迎新 报到流程 报到码 录取通知书 入学",
+    audience:"当年录取的新生",
+    action:"完成数字校园认证、i学工登记、安全教育、学费缴纳等线上流程，生成报到码；报到当日带身份证和录取通知书原件。",
+    time:"以当年迎新通知为准",
+    link:"https://mp.weixin.qq.com/s?__biz=...",
+    source:"杭电学生公众号/迎新通知（请替换为当年有效链接）", checked:"2026-11-17",
+    note:"此链接为示例占位，请替换为杭电学生公众号或学工部当年发布的新生报到通知链接。" },
+
+  { id:"scholarship", category:"校内办事", type:"待办事项", title:"查看奖助学金申请通知",
+    keywords:"奖助学金 奖学金 助学金 国家奖学金 励志奖学金 申请 学工系统",
+    audience:"符合通知条件的学生",
+    action:"确认申请条件、截止时间和材料要求；通过易班APP“杭电学生-学工系统-奖助学金”或网页端填写并提交。",
+    time:"以学校及学院当年通知为准",
+    link:"https://comm.hdu.edu.cn/_upload/article/files/99/49/a5cffd194d588f46e78203262ee9/a8dc5846-3dd3-49f0-b640-9052aebdb789.docx",
+    source:"杭电学工部奖助学金系统申报步骤说明", checked:"2026-11-17" },
+
+  { id:"enrollment-cert", category:"校内办事", type:"服务指南", title:"在校证明/在读证明办理",
+    keywords:"在校证明 在读证明 证明 成绩单 自助打印 可信电子证明",
+    audience:"需要开具在校证明或在读证明的学生",
+    action:"可通过自助打印终端、钉钉“可信平台”或教务系统等渠道查看和办理；具体渠道以学校当前服务为准。",
+    time:"工作日/自助服务时间",
+    link:"https://jwc.hdu.edu.cn/",
+    source:"杭电教务处及可信电子证明相关通知", checked:"2026-11-17" },
+
+  { id:"campus-card", category:"校内办事", type:"服务指南", title:"校园卡挂失与补办",
+    keywords:"校园卡 一卡通 挂失 补办 饭卡 补卡 后勤服务大厅",
+    audience:"校园卡遗失或损坏的学生",
+    action:"先在“杭电后勤生活”公众号智慧服务中挂失，再前往后勤服务大厅补办；补办后原卡作废。",
+    time:"挂失可线上随时操作；补办按后勤服务大厅工作时间",
+    link:"https://help.hduhelp.com/",
+    source:"杭电导航/后勤服务说明", checked:"2026-11-17" },
+
+  { id:"award-honor", category:"校内办事", type:"待办事项", title:"查看评奖评优通知",
+    keywords:"评奖评优 十佳大学生 优秀毕业生 优秀学生 评选 荣誉",
+    audience:"符合评选条件的学生",
+    action:"查看学院或学工部发布的评选通知，按通知准备材料并在截止时间前提交。",
+    time:"以学院和学工部当年通知为准",
+    link:"https://student.hdu.edu.cn/",
+    source:"杭电学工部/学院评奖评优通知", checked:"2026-11-17" },
+
+  { id:"dorm-repair", category:"生活服务", type:"服务指南", title:"宿舍设施损坏如何报修",
+    keywords:"宿舍 报修 维修 寝室 水电 设施 损坏 我要修",
+    audience:"住校学生",
+    action:"关注“杭电后勤生活”公众号，进入“智慧服务—我要修”，说明楼栋、房间号和故障情况；紧急情况可拨打应急维修电话。",
+    time:"线上随时可报修；应急维修按后勤安排",
+    link:"https://help.hduhelp.com/",
+    source:"杭电导航/杭电后勤生活报修说明", checked:"2026-11-17" },
+
+  { id:"utilities", category:"生活服务", type:"服务指南", title:"水电费查询与充值",
+    keywords:"水电 电费 水费 充值 智能电 电费查询 交电费",
+    audience:"住校学生",
+    action:"电费可通过“杭电后勤生活”公众号“智慧服务—智能电”查询和充值；也可关注“杭电助手”设置电费提醒。",
+    time:"线上随时可查/充值；智能电数据每天早上8点更新",
+    link:"https://help.hduhelp.com/",
+    source:"杭电后勤生活/杭电助手说明", checked:"2026-11-17" },
+
+  { id:"campus-network", category:"生活服务", type:"服务指南", title:"校园网办理与故障报修",
+    keywords:"校园网 网络 宽带 WiFi 断网 故障报修 网络中心",
+    audience:"需要使用校园网的学生",
+    action:"宿舍宽带通常需办理校园卡；教学区网络故障可通过“在杭电”公众号报修，或联系信息技术中心。",
+    time:"报修工作日8:00—17:00实时受理，其余时段后台受理后预约",
+    link:"https://nicin.hdu.edu.cn/",
+    source:"杭电信息技术中心/网络故障报修说明", checked:"2026-11-17" },
+
+  { id:"shuttle", category:"生活服务", type:"服务指南", title:"查看校车/班车时刻",
+    keywords:"校车 班车 时刻表 通勤 下沙 青山湖 绍兴 交通",
+    audience:"需要乘坐学校班车的学生",
+    action:"查看学校官网“服务信息”或对应校区发布的班车运行安排，确认发车时间和线路。",
+    time:"以学校最新班车时刻表为准",
+    link:"https://www.hdu.edu.cn/",
+    source:"杭电官网“服务信息”", checked:"2026-11-17" },
+
+  { id:"clinic", category:"生活服务", type:"服务指南", title:"校医院联系方式与体检通知",
+    keywords:"校医院 体检 医疗 看病 健康 联系电话 复查",
+    audience:"需要就医、体检或健康咨询的学生",
+    action:"查看校医院发布的通知；一般就诊和体检安排可先电话咨询校医院。",
+    time:"按校医院工作时间和通知安排",
+    link:"https://xyy.hdu.edu.cn/",
+    source:"杭电校医院", checked:"2026-11-17" }
+];
+
+const CAT_COLOR = { "学习":"#3b82f6", "校内办事":"#8b5cf6", "生活服务":"#10b981" };
+
+/* ================= 登录 / 跳过 ================= */
+const loginView = document.getElementById("loginView");
+const appView   = document.getElementById("appView");
+const sidInput  = document.getElementById("sid");
+const pwdInput  = document.getElementById("pwd");
+const errEl     = document.getElementById("err");
+
+function currentUser(){
+  try { return JSON.parse(localStorage.getItem("hdu_demo_user") || "null"); }
+  catch(e){ return null; }
+}
+function greeting(){
+  const h = new Date().getHours();
+  if (h < 6)  return "夜深了";
+  if (h < 11) return "早上好";
+  if (h < 14) return "中午好";
+  if (h < 18) return "下午好";
+  return "晚上好";
+}
+
+function showApp(){
+  const user = currentUser();
+  if (!user) return;
+
+  const isPersonal = user.mode === "personal";
+  document.getElementById("greet").textContent =
+    isPersonal ? greeting() + "，同学 👋" : "游客模式 👀";
+  document.getElementById("sidLabel").textContent =
+    isPersonal ? "学号 " + user.sid + " · 个人面板" : "直接体验 · 完成状态只保存在本机";
+
+  document.getElementById("personalPanel").classList.toggle("hidden", !isPersonal);
+  document.getElementById("guestTip").classList.toggle("hidden", isPersonal);
+
+  loginView.classList.add("hidden");
+  appView.classList.remove("hidden");
+  render();
+}
+
+function doLogin(){
+  const sid = sidInput.value.trim();
+  const pwd = pwdInput.value;
+  errEl.textContent = "";
+
+  if (!sid || !pwd) {
+    errEl.textContent = "请输入学号和密码，或点击下方“跳过登录”。";
+    return;
+  }
+  if (sid !== DEMO_SID || pwd !== DEMO_PWD) {
+    errEl.textContent = "账号或密码不正确。演示账号 12345678 / 87654321，或跳过登录直接体验。";
+    return;
+  }
+
+  localStorage.setItem("hdu_demo_user", JSON.stringify({ sid, mode:"personal" }));
+  pwdInput.value = "";
+  showApp();
+}
+
+function skipLogin(){
+  localStorage.setItem("hdu_demo_user", JSON.stringify({ sid:null, mode:"guest" }));
+  showApp();
+}
+
+document.getElementById("loginBtn").addEventListener("click", doLogin);
+document.getElementById("skipBtn").addEventListener("click", skipLogin);
+pwdInput.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+sidInput.addEventListener("keydown", e => { if (e.key === "Enter") pwdInput.focus(); });
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  localStorage.removeItem("hdu_demo_user");
+  appView.classList.add("hidden");
+  loginView.classList.remove("hidden");
+  sidInput.value = "";
+  pwdInput.value = "";
+  errEl.textContent = "";
+});
+
+/* ================= 事项查询 ================= */
+const searchEl  = document.getElementById("search");
+const resultsEl = document.getElementById("results");
+const countEl   = document.getElementById("count");
+const catsEl    = document.getElementById("cats");
+
+let currentCat = "全部";
+
+function getDone(){
+  try { return JSON.parse(localStorage.getItem("hdu_done_ids") || "[]"); }
+  catch(e){ return []; }
+}
+function setDone(ids){ localStorage.setItem("hdu_done_ids", JSON.stringify(ids)); }
+function toggleDone(id){
+  let done = getDone();
+  if (done.includes(id)) done = done.filter(x => x !== id);
+  else done.push(id);
+  setDone(done);
+  render();
+}
+function escapeHtml(str){
+  return String(str).replace(/[&<>"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s]));
+}
+
+function updateStats(){
+  const done = getDone();
+  const doneCount = items.filter(it => done.includes(it.id)).length;
+  const todoCount = items.filter(it => it.type === "待办事项" && !done.includes(it.id)).length;
+
+  document.getElementById("statDone").textContent = doneCount;
+  document.getElementById("statTodo").textContent = todoCount;
+  document.getElementById("statAll").textContent  = items.length;
+
+  const tip = document.getElementById("panelTip");
+  if (todoCount === 0) tip.textContent = "待办都清完了，太棒了！🎉";
+  else if (todoCount <= 3) tip.textContent = `还剩 ${todoCount} 条待办，抽空处理一下吧。`;
+  else tip.textContent = `还有 ${todoCount} 条待办，建议先看有截止时间的考试报名和奖助学金。`;
+}
+
+function render(){
+  if (appView.classList.contains("hidden")) return;
+
+  const q = searchEl.value.trim().toLowerCase();
+  const done = getDone();
+
+  updateStats();
+
+  const list = items.filter(it => {
+    if (currentCat !== "全部" && it.category !== currentCat) return false;
+    if (!q) return true;
+    return [it.title, it.category, it.type, it.keywords, it.audience, it.action, it.time, it.source]
+      .join(" ").toLowerCase().includes(q);
+  });
+
+  countEl.textContent = list.length ? `为你找到 ${list.length} 条相关事项` : "";
+
+  if (!list.length) {
+    resultsEl.innerHTML = `
+      <div class="empty">
+        😅 没有找到 <b>“${escapeHtml(searchEl.value.trim())}”</b> 相关的事项<br>
+        试试更短的关键词，比如“英语”“报修”“证明”，或者点上面的分类看看。
+      </div>`;
+    return;
+  }
+
+  resultsEl.innerHTML = list.map(it => {
+    const isDone = done.includes(it.id);
+    const color  = CAT_COLOR[it.category] || "#2563eb";
+    return `
+    <div class="card" style="--c:${color}">
+      <div class="tags">
+        <span class="tag">${escapeHtml(it.category)}</span>
+        <span class="tag type">${escapeHtml(it.type)}</span>
+      </div>
+      <div class="title">${escapeHtml(it.title)}</div>
+      <div class="row"><span class="label">适用对象：</span>${escapeHtml(it.audience)}</div>
+      <div class="row"><span class="label">需要做什么：</span>${escapeHtml(it.action)}</div>
+      <div class="row"><span class="label">办理时间：</span>${escapeHtml(it.time)}</div>
+      <div class="row"><span class="label">入口：</span><a href="${escapeHtml(it.link)}" target="_blank" rel="noopener">打开官方页面 ↗</a></div>
+      <div class="row"><span class="label">来源：</span>${escapeHtml(it.source)}</div>
+      <div class="row"><span class="label">最后核对日期：</span>${escapeHtml(it.checked)}</div>
+      ${it.note ? `<div class="row" style="color:#8a5300;font-size:13px;">提示：${escapeHtml(it.note)}</div>` : ""}
+      <button class="btn ${isDone ? "done" : ""}" onclick="toggleDone('${it.id}')">
+        ${isDone ? "✓ 我已完成" : "标记为已完成"}
+      </button>
+    </div>`;
+  }).join("");
+}
+
+catsEl.addEventListener("click", e => {
+  const btn = e.target.closest(".cat");
+  if (!btn) return;
+  document.querySelectorAll(".cat").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  currentCat = btn.dataset.cat;
+  render();
+});
+
+document.querySelectorAll(".chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    searchEl.value = chip.dataset.q;
+    render();
+    searchEl.focus();
+  });
+});
+
+searchEl.addEventListener("input", render);
+
+/* ================= 启动 ================= */
+if (currentUser()) showApp();
+</script>
+</body>
+</html>
